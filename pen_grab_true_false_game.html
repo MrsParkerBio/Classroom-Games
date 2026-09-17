@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pen Grab - Classroom Game</title>
+    
+    <!-- React & Babel for component logic -->
+    <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts for classroom-friendly typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons for UI elements -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f0fdf4; /* Light green background */
+            margin: 0;
+            overflow-x: hidden;
+            -webkit-user-select: none; /* Safari */
+            -ms-user-select: none; /* IE 10 and IE 11 */
+            user-select: none; /* Standard syntax */
+        }
+        
+        h1, h2, h3, .heading-font {
+            font-family: 'Fredoka One', cursive;
+        }
+
+        .pulse-fast {
+            animation: pulse-fast 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse-fast {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .slide-in {
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Hide number input arrows */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const DEFAULT_QUESTIONS = [
+            { text: "The Earth is flat.", isTrue: false, explanation: "The Earth is an oblate spheroid." },
+            { text: "Water freezes at 0 degrees Celsius.", isTrue: true, explanation: "This is the freezing point of water at standard atmospheric pressure." },
+            { text: "Spiders are classified as insects.", isTrue: false, explanation: "Spiders are arachnids because they have eight legs, not six." },
+            { text: "Light travels faster than sound.", isTrue: true, explanation: "You see lightning before you hear thunder!" },
+            { text: "The capital of Australia is Sydney.", isTrue: false, explanation: "The capital is actually Canberra." },
+            { text: "A standard triangle has 4 sides.", isTrue: false, explanation: "A triangle has 3 sides." },
+            { text: "Humans have 4 lungs.", isTrue: false, explanation: "Humans have 2 lungs." },
+            { text: "The chemical symbol for Gold is Au.", isTrue: true, explanation: "From the Latin word 'aurum'." },
+            { text: "Mount Everest is the tallest mountain on Earth.", isTrue: true, explanation: "It stands 8,848 meters above sea level." },
+            { text: "Octopuses have three hearts.", isTrue: true, explanation: "Two pump blood to the gills, one to the rest of the body." }
+        ];
+
+        const SCIENTISTS = [
+            "Einstein", "Newton", "Darwin", "Curie", "Hawking", 
+            "Galileo", "Tesla", "Faraday", "Mendel", "Watson", 
+            "Crick", "Franklin", "Pasteur", "Fleming", "Bohr", 
+            "Sagan", "Lovelace", "Hubble"
+        ];
+
+        const TEAM_SORTERS = [
+            { q: "Who woke up earliest today?", a: "woke up earliest", b: "woke up latest" },
+            { q: "Who travelled the furthest to get to school today?", a: "travelled the furthest", b: "travelled the shortest distance" },
+            { q: "Who is taller?", a: "are taller", b: "are shorter" },
+            { q: "Who has the longer first name?", a: "have the longer first name", b: "have the shorter first name" },
+            { q: "Who has the shorter first name?", a: "have the shorter first name", b: "have the longer first name" },
+            { q: "Whose first name comes first in the alphabet?", a: "have a first name earlier in the alphabet", b: "have a first name later in the alphabet" },
+            { q: "Whose first name comes last in the alphabet?", a: "have a first name later in the alphabet", b: "have a first name earlier in the alphabet" },
+            { q: "Whose surname comes first in the alphabet?", a: "have a surname earlier in the alphabet", b: "have a surname later in the alphabet" },
+            { q: "Whose surname comes last in the alphabet?", a: "have a surname later in the alphabet", b: "have a surname earlier in the alphabet" },
+            { q: "Who has the earliest birthday in the year?", a: "have the earliest birthday", b: "have the latest birthday" },
+            { q: "Who has the latest birthday in the year?", a: "have the latest birthday", b: "have the earliest birthday" },
+            { q: "Whose birthday is closest to the 1st of the month?", a: "have a birthday closest to the 1st", b: "have a birthday furthest from the 1st" },
+            { q: "Whose birthday is closest to the 15th of the month?", a: "have a birthday closest to the 15th", b: "have a birthday furthest from the 15th" },
+            { q: "Who was born closest to the start of the year?", a: "were born closest to the start of the year", b: "were born closest to the end of the year" },
+            { q: "Who was born closest to the end of the year?", a: "were born closest to the end of the year", b: "were born closest to the start of the year" },
+            { q: "Who has the most letters in their full name?", a: "have the most letters in your full name", b: "have the fewest letters in your full name" },
+            { q: "Who has the fewest letters in their full name?", a: "have the fewest letters in your full name", b: "have the most letters in your full name" },
+            { q: "Who has the longest first name?", a: "have the longest first name", b: "have the shortest first name" },
+            { q: "Who has the shortest surname?", a: "have the shortest surname", b: "have the longest surname" }
+        ];
+
+        const getRandomScientists = () => {
+            const shuffled = [...SCIENTISTS].sort(() => 0.5 - Math.random());
+            return [shuffled[0], shuffled[1]];
+        };
+
+        function triggerConfetti() {
+            const canvas = document.createElement('canvas');
+            document.body.appendChild(canvas);
+            canvas.style.position = 'fixed';
+            canvas.style.top = '0';
+            canvas.style.left = '0';
+            canvas.style.width = '100vw';
+            canvas.style.height = '100vh';
+            canvas.style.pointerEvents = 'none';
+            canvas.style.zIndex = '9999';
+
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const pieces = [];
+            const colors = ['#f43f5e', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
+
+            for (let i = 0; i < 200; i++) {
+                pieces.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2 + 200,
+                    vx: (Math.random() - 0.5) * 30,
+                    vy: (Math.random() - 1) * 30,
+                    size: Math.random() * 15 + 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    rotation: Math.random() * 360,
+                    rotationSpeed: (Math.random() - 0.5) * 10
+                });
+            }
+
+            let animationId;
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let active = false;
+                pieces.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.5; // gravity
+                    p.rotation += p.rotationSpeed;
+                    
+                    if (p.y < canvas.height) active = true;
+
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rotation * Math.PI / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+                    ctx.restore();
+                });
+
+                if (active) {
+                    animationId = requestAnimationFrame(animate);
+                } else {
+                    document.body.removeChild(canvas);
+                }
+            }
+            animate();
+        }
+
+        function App() {
+            // App states: 'setup', 'team_sort_q', 'team_sort_reveal', 'question', 'reveal', 'scoring', 'leaderboard', 'end'
+            const [gameState, setGameState] = useState('setup');
+            const [questions, setQuestions] = useState(DEFAULT_QUESTIONS);
+            const [currentQIndex, setCurrentQIndex] = useState(0);
+            
+            const [teamAScore, setTeamAScore] = useState(0);
+            const [teamBScore, setTeamBScore] = useState(0);
+
+            // Random team names
+            const [teamNames, setTeamNames] = useState(getRandomScientists);
+            const teamAName = teamNames[0];
+            const teamBName = teamNames[1];
+            
+            // Timer state
+            const [timeLeft, setTimeLeft] = useState(10);
+            
+            // Scoring inputs per round
+            const [pensA, setPensA] = useState(0);
+            const [pensB, setPensB] = useState(0);
+            
+            const [pasteError, setPasteError] = useState(false);
+            const [pasteSuccess, setPasteSuccess] = useState(false);
+            const [currentSorter, setCurrentSorter] = useState(null);
+
+            // Audio Refs (Optional, if teacher wants to add sounds later)
+            const tickSound = useRef(null);
+
+            useEffect(() => {
+                let timer;
+                if (gameState === 'question') {
+                    setTimeLeft(10);
+                    timer = setInterval(() => {
+                        setTimeLeft((prev) => {
+                            if (prev <= 1) {
+                                clearInterval(timer);
+                                setGameState('reveal');
+                                return 0;
+                            }
+                            return prev - 1;
+                        });
+                    }, 1000);
+                }
+                return () => {
+                    if (timer) clearInterval(timer);
+                };
+            }, [gameState, currentQIndex]);
+
+            const renderSetup = () => {
+                const handleQuestionChange = (index, field, value) => {
+                    const newQs = [...questions];
+                    newQs[index][field] = value;
+                    setQuestions(newQs);
+                };
+
+                const handlePaste = (e) => {
+                    const clipboardData = e.clipboardData || window.clipboardData;
+                    if (!clipboardData) return;
+                    
+                    // Use text/plain for best compatibility, fallback to Text
+                    const pasteData = clipboardData.getData('text/plain') || clipboardData.getData('text') || clipboardData.getData('Text');
+                    if (!pasteData) return;
+                    
+                    // Strip carriage returns to ensure regex and splitting work smoothly
+                    const rows = pasteData.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(row => row.trim() !== '');
+                    let parsedQuestions = [];
+                    
+                    rows.forEach(row => {
+                        // Look for the semicolon delimiter
+                        if (row.includes(';')) {
+                            const parts = row.split(';');
+                            if (parts.length >= 2) {
+                                const text = parts[0].trim();
+                                const isTrueStr = parts[1].trim().toLowerCase();
+                                const explanation = parts.length > 2 ? parts.slice(2).join(';').trim() : "";
+                                
+                                if (text && isTrueStr) {
+                                    const isTrue = isTrueStr.startsWith('t') || isTrueStr.startsWith('y') || isTrueStr === '1';
+                                    parsedQuestions.push({ text, isTrue, explanation });
+                                }
+                            }
+                        }
+                    });
+
+                    if (parsedQuestions.length > 0) {
+                        setQuestions(parsedQuestions);
+                        setPasteError(false);
+                        setPasteSuccess(true);
+                        setTimeout(() => setPasteSuccess(false), 4000);
+                        e.preventDefault(); // Prevents text from staying in the box if successful
+                    } else {
+                        // Show error message for 4 seconds if format isn't recognized
+                        setPasteError(true);
+                        setPasteSuccess(false);
+                        setTimeout(() => setPasteError(false), 4000);
+                    }
+                };
+
+                const addQuestion = () => setQuestions([...questions, { text: "", isTrue: true, explanation: "" }]);
+                const removeQuestion = (index) => setQuestions(questions.filter((_, i) => i !== index));
+
+                const isSetupComplete = questions.length > 0 && questions.every(q => q.text.trim() !== '');
+
+                return (
+                    <div className="flex flex-col min-h-screen bg-gray-100 p-8">
+                        <div className="max-w-4xl mx-auto w-full bg-white rounded-2xl shadow-xl p-8 slide-in">
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-4xl heading-font text-blue-600">Game Setup</h2>
+                                <div className="text-gray-500 font-bold bg-gray-100 px-4 py-2 rounded-full">🖊️ Pen Grab!</div>
+                            </div>
+                            
+                            <div className="mb-8 bg-blue-50 border-2 border-blue-200 border-dashed p-6 rounded-xl text-center">
+                                <h3 className="text-2xl heading-font text-blue-800 mb-2">Quick Import</h3>
+                                <p className="text-blue-600 mb-4 font-semibold">Paste your statements separated by a semicolon (;). <br/>Example: <i>A virus has a protein capsid.; T ; Optional explanation here</i></p>
+                                <textarea 
+                                    className={`w-full max-w-lg mx-auto p-4 text-center text-lg border-2 rounded-xl focus:outline-none shadow-inner resize-none bg-white transition-colors ${pasteError ? 'border-red-400 focus:border-red-500' : 'border-blue-300 focus:border-blue-500'}`}
+                                    rows="2"
+                                    placeholder="Click here and press Ctrl+V to paste list..."
+                                    onPaste={handlePaste}
+                                    onChange={(e) => e.target.value = ''}
+                                />
+                                {pasteError && (
+                                    <div className="text-red-500 font-bold mt-3 animate-bounce">
+                                        ⚠️ Couldn't read the format! Make sure it's: Statement ; T/F
+                                    </div>
+                                )}
+                                {pasteSuccess && (
+                                    <div className="text-green-600 text-xl font-bold mt-3 animate-pulse drop-shadow-sm">
+                                        ✅ Success, your statements are now ready below!
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex justify-between items-end mb-4">
+                                <p className="text-gray-600 text-lg font-semibold">Or manually edit your statements:</p>
+                                <button onClick={addQuestion} className="bg-green-100 hover:bg-green-200 text-green-700 px-4 py-2 rounded-lg font-bold transition shadow-sm border border-green-300">
+                                    + Add Statement
+                                </button>
+                            </div>
+
+                            <div className="space-y-4 max-h-[45vh] overflow-y-auto pr-4 pb-4">
+                                {questions.map((q, i) => (
+                                    <div key={i} className="flex flex-col gap-2 bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm">
+                                        <div className="flex items-center gap-3">
+                                            <div className="text-2xl heading-font text-gray-400 w-8 text-center">{i + 1}</div>
+                                            <input 
+                                                type="text" 
+                                                value={q.text}
+                                                onChange={(e) => handleQuestionChange(i, 'text', e.target.value)}
+                                                className="flex-1 text-lg p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"
+                                                placeholder="Enter statement..."
+                                            />
+                                            <button 
+                                                onClick={() => handleQuestionChange(i, 'isTrue', !q.isTrue)}
+                                                className={`w-32 py-3 rounded-lg heading-font text-white transition-colors shadow-md ${q.isTrue ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'}`}
+                                            >
+                                                {q.isTrue ? 'TRUE' : 'FALSE'}
+                                            </button>
+                                            <button 
+                                                onClick={() => removeQuestion(i)}
+                                                className="bg-red-100 hover:bg-red-200 text-red-600 p-3 rounded-lg font-bold shadow-sm transition border border-red-200"
+                                                title="Remove statement"
+                                            >
+                                                ✖
+                                            </button>
+                                        </div>
+                                        <div className="flex items-center gap-3 pl-11">
+                                             <input 
+                                                type="text" 
+                                                value={q.explanation || ""}
+                                                onChange={(e) => handleQuestionChange(i, 'explanation', e.target.value)}
+                                                className="flex-1 text-md p-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white italic text-gray-600"
+                                                placeholder="Optional explanation (e.g. why it is false)..."
+                                            />
+                                        </div>
+                                    </div>
+                                ))}
+                                {questions.length === 0 && (
+                                    <div className="text-center text-gray-400 py-8 italic bg-gray-50 rounded-xl border border-gray-200">No statements yet. Paste a table or click "+ Add Statement".</div>
+                                )}
+                            </div>
+
+                            <div className="mt-8 text-center border-t pt-6 flex flex-col items-center">
+                                <button 
+                                    onClick={() => {
+                                        setCurrentSorter(TEAM_SORTERS[Math.floor(Math.random() * TEAM_SORTERS.length)]);
+                                        setGameState('team_sort_q');
+                                    }}
+                                    disabled={!isSetupComplete}
+                                    className={`heading-font text-3xl py-5 px-16 rounded-full shadow-lg transform transition ${isSetupComplete ? 'bg-blue-600 hover:bg-blue-500 text-white hover:scale-105' : 'bg-gray-400 text-gray-200 cursor-not-allowed opacity-70'}`}
+                                >
+                                    {isSetupComplete ? 'Start Game 🚀' : 'Finish Inputs to Start'}
+                                </button>
+                                {!isSetupComplete && <p className="text-red-500 mt-4 font-bold text-lg">⚠️ Make sure all statements are filled out to start!</p>}
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderTeamSortQ = () => {
+                if (!currentSorter) return null;
+                return (
+                    <div className="flex flex-col items-center justify-center min-h-screen text-center p-6 bg-slate-900 text-white slide-in">
+                        <div className="max-w-5xl w-full">
+                            <h2 className="text-4xl text-gray-300 font-bold mb-8 uppercase tracking-widest">In your pairs, figure out...</h2>
+                            <h1 className="text-6xl md:text-8xl heading-font mb-16 leading-tight text-yellow-400 drop-shadow-xl">
+                                "{currentSorter.q}"
+                            </h1>
+                            <button 
+                                onClick={() => setGameState('team_sort_reveal')}
+                                className="bg-white text-slate-900 hover:bg-gray-200 heading-font text-4xl py-6 px-16 rounded-full shadow-2xl transform transition hover:scale-105"
+                            >
+                                Reveal Teams ➔
+                            </button>
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderTeamSortReveal = () => {
+                if (!currentSorter) return null;
+                return (
+                    <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-slate-900 slide-in text-white overflow-hidden">
+                        <h2 className="text-5xl heading-font mb-4 text-white drop-shadow-md">Team Assignments!</h2>
+                        
+                        <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 w-full max-w-7xl mt-8 z-10 items-stretch justify-center">
+                            
+                            <div className="flex-1 flex flex-col items-center bg-white/10 p-10 rounded-[3rem] shadow-2xl border-4 border-[#00afd7] backdrop-blur-md">
+                                <h3 className="text-3xl font-bold text-gray-300 mb-6 uppercase tracking-wider">Partners who...</h3>
+                                <p className="text-5xl md:text-6xl heading-font text-white mb-8 text-center flex-grow flex items-center">{currentSorter.a}</p>
+                                <div className="text-2xl text-gray-400 mb-4 italic">are on team</div>
+                                <div className="w-full bg-[#00afd7] py-6 rounded-3xl shadow-[0_10px_30px_rgba(0,175,215,0.4)] text-center">
+                                    <span className="text-6xl heading-font text-white">{teamAName}</span>
+                                </div>
+                            </div>
+                            
+                            <div className="flex-1 flex flex-col items-center bg-white/10 p-10 rounded-[3rem] shadow-2xl border-4 border-[#c4d600] backdrop-blur-md">
+                                <h3 className="text-3xl font-bold text-gray-300 mb-6 uppercase tracking-wider">Partners who...</h3>
+                                <p className="text-5xl md:text-6xl heading-font text-white mb-8 text-center flex-grow flex items-center">{currentSorter.b}</p>
+                                <div className="text-2xl text-gray-400 mb-4 italic">are on team</div>
+                                <div className="w-full bg-[#c4d600] py-6 rounded-3xl shadow-[0_10px_30px_rgba(196,214,0,0.4)] text-center">
+                                    <span className="text-6xl heading-font text-slate-900">{teamBName}</span>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <button 
+                            onClick={() => setGameState('question')}
+                            className="mt-16 bg-blue-600 text-white hover:bg-blue-500 heading-font text-4xl py-6 px-16 rounded-full shadow-[0_0_40px_rgba(37,99,235,0.6)] transform transition hover:scale-105 z-10"
+                        >
+                            Start Round 1 ⏱️
+                        </button>
+                    </div>
+                );
+            };
+
+            const renderQuestion = () => {
+                const isWarning = timeLeft <= 3;
+
+                return (
+                    <div className="flex flex-col items-center justify-center min-h-screen text-center p-6 bg-blue-600 text-white slide-in">
+                        <div className="absolute top-6 left-6 text-2xl font-bold bg-white/20 px-6 py-2 rounded-full">
+                            Statement {currentQIndex + 1} of {questions.length}
+                        </div>
+                        
+                        <div className="max-w-5xl w-full">
+                            <h2 className="text-6xl md:text-8xl heading-font mb-12 leading-tight drop-shadow-xl">
+                                "{questions[currentQIndex].text}"
+                            </h2>
+                            
+                            <div className={`text-9xl heading-font mt-12 ${isWarning ? 'text-red-400 pulse-fast' : 'text-yellow-300'}`}>
+                                {timeLeft}
+                            </div>
+                            <p className="text-2xl mt-4 opacity-80">Seconds Remaining</p>
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderReveal = () => {
+                const q = questions[currentQIndex];
+                
+                return (
+                    <div className={`flex flex-col items-center justify-center min-h-screen text-center p-6 slide-in text-white ${q.isTrue ? 'bg-green-500' : 'bg-red-500'}`}>
+                        <h2 className="text-4xl md:text-6xl font-bold mb-4">The statement was...</h2>
+                        <div className="text-9xl heading-font my-4 drop-shadow-2xl pulse-fast uppercase tracking-widest">
+                            {q.isTrue ? 'TRUE!' : 'FALSE!'}
+                        </div>
+
+                        {q.explanation && q.explanation.trim() !== "" && (
+                            <div className="bg-white/90 text-gray-900 p-6 rounded-2xl max-w-3xl w-full mt-4 shadow-xl slide-in">
+                                <h3 className="text-2xl heading-font mb-2 text-blue-600">Why?</h3>
+                                <p className="text-xl font-semibold">{q.explanation}</p>
+                            </div>
+                        )}
+                        
+                        <div className="bg-white/20 p-6 rounded-2xl max-w-2xl w-full mt-8 backdrop-blur-sm">
+                            <h3 className="text-3xl heading-font mb-4">Rule Reminder:</h3>
+                            <p className="text-2xl">
+                                {q.isTrue 
+                                    ? "🟢 If you GRABBED the pen, you get +1 point!" 
+                                    : "🔴 If you GRABBED the pen, you LOSE 1 point!"}
+                            </p>
+                        </div>
+
+                        <button 
+                            onClick={() => {
+                                setPensA(0);
+                                setPensB(0);
+                                setGameState('scoring');
+                            }}
+                            className="mt-12 bg-white text-gray-900 hover:bg-gray-100 heading-font text-3xl py-5 px-12 rounded-full shadow-2xl transform transition hover:scale-105"
+                        >
+                            Input Scores <i className="ph ph-arrow-right inline-block ml-2"></i>
+                        </button>
+                    </div>
+                );
+            };
+
+            const renderScoring = () => {
+                const q = questions[currentQIndex];
+                
+                const handleScoreSubmit = () => {
+                    let pointsA = q.isTrue ? pensA : -pensA;
+                    let pointsB = q.isTrue ? pensB : -pensB;
+                    
+                    setTeamAScore(prev => prev + pointsA);
+                    setTeamBScore(prev => prev + pointsB);
+                    
+                    setGameState('leaderboard');
+                };
+
+                const Counter = ({ teamName, value, setValue, colorClass, textColor, elementBg }) => (
+                    <div className={`p-8 rounded-3xl ${colorClass} ${textColor} flex flex-col items-center shadow-lg w-full max-w-md`}>
+                        <h3 className="text-4xl heading-font mb-6">{teamName}</h3>
+                        <p className="text-lg mb-4 opacity-90">How many pens grabbed?</p>
+                        <div className="flex items-center gap-6">
+                            <button 
+                                onClick={() => setValue(Math.max(0, value - 1))}
+                                className={`w-20 h-20 ${elementBg} hover:opacity-80 rounded-full text-5xl font-bold flex items-center justify-center transition active:scale-95`}
+                            >
+                                -
+                            </button>
+                            <div className={`text-7xl heading-font w-32 text-center ${elementBg} rounded-2xl py-2`}>
+                                {value}
+                            </div>
+                            <button 
+                                onClick={() => setValue(value + 1)}
+                                className={`w-20 h-20 ${elementBg} hover:opacity-80 rounded-full text-5xl font-bold flex items-center justify-center transition active:scale-95`}
+                            >
+                                +
+                            </button>
+                        </div>
+                    </div>
+                );
+
+                return (
+                    <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-gray-900 slide-in">
+                        <div className="mb-12 text-center">
+                            <h2 className="text-5xl heading-font text-white mb-4">Log the Pens!</h2>
+                            <div className={`inline-block px-6 py-2 rounded-full text-xl font-bold ${q.isTrue ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
+                                Statement was {q.isTrue ? 'TRUE (+1 pt per pen)' : 'FALSE (-1 pt per pen)'}
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col md:flex-row gap-8 justify-center w-full max-w-5xl">
+                            <Counter teamName={teamAName} value={pensA} setValue={setPensA} colorClass="bg-[#00afd7]" textColor="text-white" elementBg="bg-white/20" />
+                            <Counter teamName={teamBName} value={pensB} setValue={setPensB} colorClass="bg-[#c4d600]" textColor="text-slate-900" elementBg="bg-black/10" />
+                        </div>
+
+                        <button 
+                            onClick={handleScoreSubmit}
+                            className="mt-16 bg-yellow-400 hover:bg-yellow-300 text-yellow-900 heading-font text-3xl py-5 px-16 rounded-full shadow-[0_0_40px_rgba(250,204,21,0.4)] transform transition hover:scale-105"
+                        >
+                            Update Leaderboard
+                        </button>
+                    </div>
+                );
+            };
+
+            const renderLeaderboard = () => {
+                const handleNext = () => {
+                    if (currentQIndex + 1 < questions.length) {
+                        setCurrentQIndex(prev => prev + 1);
+                        setGameState('question');
+                    } else {
+                        triggerConfetti();
+                        setGameState('end');
+                    }
+                };
+
+                return (
+                    <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-slate-800 slide-in text-white relative overflow-hidden">
+                        
+                        <h2 className="text-5xl heading-font mb-16 text-yellow-400 tracking-wide drop-shadow-md">Current Scores</h2>
+                        
+                        <div className="flex flex-col md:flex-row items-center justify-center gap-12 md:gap-32 w-full max-w-6xl z-10">
+                            
+                            <div className="flex flex-col items-center">
+                                <div className="text-5xl heading-font mb-6 text-[#00afd7]">{teamAName}</div>
+                                <div className="w-64 h-64 bg-[#00afd7] rounded-[3rem] shadow-[0_20px_50px_rgba(0,175,215,0.4)] flex items-center justify-center transform rotate-3">
+                                    <span className="text-8xl heading-font text-white">{teamAScore}</span>
+                                </div>
+                            </div>
+                            
+                            <div className="text-7xl heading-font text-gray-500 opacity-50 italic">VS</div>
+                            
+                            <div className="flex flex-col items-center">
+                                <div className="text-5xl heading-font mb-6 text-[#c4d600]">{teamBName}</div>
+                                <div className="w-64 h-64 bg-[#c4d600] rounded-[3rem] shadow-[0_20px_50px_rgba(196,214,0,0.4)] flex items-center justify-center transform -rotate-3">
+                                    <span className="text-8xl heading-font text-slate-900">{teamBScore}</span>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div className="flex items-center gap-6 mt-20 z-10">
+                            {currentQIndex + 1 < questions.length && (
+                                <button 
+                                    onClick={() => {
+                                        triggerConfetti();
+                                        setGameState('end');
+                                    }}
+                                    className="bg-red-500/80 text-white hover:bg-red-500 heading-font text-xl py-4 px-8 rounded-full shadow-xl transform transition hover:scale-105"
+                                >
+                                    End Early 🛑
+                                </button>
+                            )}
+                            <button 
+                                onClick={handleNext}
+                                className="bg-white text-slate-900 hover:bg-gray-200 heading-font text-3xl py-5 px-16 rounded-full shadow-2xl transform transition hover:scale-105"
+                            >
+                                {currentQIndex + 1 < questions.length ? 'Next Statement ➔' : 'Finish Game 🏆'}
+                            </button>
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderEnd = () => {
+                let winnerText = "It's a Tie!";
+                let winnerColor = "text-yellow-400";
+                
+                if (teamAScore > teamBScore) {
+                    winnerText = `${teamAName} Wins!`;
+                    winnerColor = "text-[#00afd7]";
+                } else if (teamBScore > teamAScore) {
+                    winnerText = `${teamBName} Wins!`;
+                    winnerColor = "text-[#c4d600]";
+                }
+
+                return (
+                    <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-slate-900 text-white slide-in">
+                        <h1 className="text-6xl heading-font mb-4">Game Over!</h1>
+                        <h2 className={`text-8xl md:text-9xl heading-font my-8 ${winnerColor} drop-shadow-[0_0_30px_rgba(255,255,255,0.3)] pulse-fast text-center`}>
+                            {winnerText}
+                        </h2>
+                        
+                        <div className="flex gap-16 mt-12 text-3xl font-bold bg-white/10 p-8 rounded-3xl backdrop-blur-md">
+                            <div className="text-center">
+                                <div className="text-[#00afd7] mb-2">{teamAName}</div>
+                                <div className="text-5xl">{teamAScore} pts</div>
+                            </div>
+                            <div className="w-px bg-white/20"></div>
+                            <div className="text-center">
+                                <div className="text-[#c4d600] mb-2">{teamBName}</div>
+                                <div className="text-5xl">{teamBScore} pts</div>
+                            </div>
+                        </div>
+
+                        <button 
+                            onClick={() => {
+                                setGameState('setup');
+                                setCurrentQIndex(0);
+                                setTeamAScore(0);
+                                setTeamBScore(0);
+                                setTeamNames(getRandomScientists());
+                            }}
+                            className="mt-16 bg-gray-700 hover:bg-gray-600 text-white heading-font text-2xl py-4 px-12 rounded-full transition"
+                        >
+                            Play Again
+                        </button>
+                    </div>
+                );
+            };
+
+            switch(gameState) {
+                case 'setup': return renderSetup();
+                case 'team_sort_q': return renderTeamSortQ();
+                case 'team_sort_reveal': return renderTeamSortReveal();
+                case 'question': return renderQuestion();
+                case 'reveal': return renderReveal();
+                case 'scoring': return renderScoring();
+                case 'leaderboard': return renderLeaderboard();
+                case 'end': return renderEnd();
+                default: return renderSetup();
+            }
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
