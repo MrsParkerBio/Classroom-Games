@@ -7,15 +7,30 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root {
-            /* Updated to Nexus brand colors */
-            --primary: #00afd7; /* Nexus Blue */
-            --primary-hover: #0096b8;
-            --nexus-green: #c4d600; /* Nexus Green */
-            --nexus-green-hover: #aebf00;
-            --bg: #F3F4F6;
-            --card-bg: #FFFFFF;
-            --text: #1F2937;
+            /* Target Nexus Colour System */
+            --nexus-blue: #00AFD7;
+            --nexus-green: #C4D600;
+            --deep-navy: #123B4A;
+            --dark-teal: #17657A;
+            --pale-blue: #E8F7FA;
+            --pale-green: #F3F7D9;
+            --warm-white: #F8FAFA;
+            --white: #FFFFFF;
+            --cool-grey: #60747A;
+            --light-grey: #DCE5E7;
+            --amber: #F4B942;
+            --coral: #E76F51;
+
+            /* Applying Nexus colours to UI roles */
+            --primary: var(--nexus-blue); 
+            --primary-hover: #0096B8; /* Slightly darker shade of Nexus Blue for hover */
+            --bg: var(--warm-white);
+            --card-bg: var(--white);
+            --text: var(--deep-navy);
+            --text-secondary: var(--cool-grey);
+            --border-color: var(--light-grey);
         }
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg);
@@ -26,14 +41,14 @@
             flex-direction: column;
             align-items: center;
         }
-        h1, h2, h3 { margin-top: 0; }
+        h1, h2, h3 { margin-top: 0; color: var(--deep-navy); }
         .container {
             width: 100%;
             max-width: 1000px;
             background: var(--card-bg);
             padding: 30px;
             border-radius: 12px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 15px -3px rgba(18, 59, 74, 0.1); /* Adjusted shadow color slightly towards Deep Navy */
             position: relative;
         }
         .hidden { display: none !important; }
@@ -42,16 +57,22 @@
             width: 100%;
             padding: 10px;
             margin: 10px 0;
-            border: 2px solid #D1D5DB;
+            border: 2px solid var(--border-color);
             border-radius: 8px;
             font-family: inherit;
             box-sizing: border-box;
+            color: var(--text);
+            background-color: var(--white);
+        }
+        textarea:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: var(--primary);
         }
         textarea { height: 120px; resize: vertical; }
         
         button {
             background-color: var(--primary);
-            color: white;
+            color: var(--white);
             border: none;
             padding: 10px 20px;
             border-radius: 8px;
@@ -62,16 +83,18 @@
             margin: 5px;
         }
         button:hover { background-color: var(--primary-hover); }
-        button.danger { background-color: #EF4444; color: white;}
-        button.danger:hover { background-color: #DC2626; }
         
-        /* Updated Success Button to use Nexus Green with dark text for readability */
-        button.success { background-color: var(--nexus-green); color: var(--text); }
-        button.success:hover { background-color: var(--nexus-green-hover); }
+        /* Specific Button Types */
+        button.danger { background-color: var(--coral); color: var(--white);}
+        button.danger:hover { background-color: #D65A3D; /* Darker Coral */ }
         
-        button.secondary { background-color: #6B7280; color: white;}
-        button.secondary:hover { background-color: #4B5563; }
-        button:disabled { background-color: #9CA3AF; cursor: not-allowed; }
+        button.success { background-color: var(--nexus-green); color: var(--deep-navy); }
+        button.success:hover { background-color: #AEC200; /* Darker Nexus Green */ }
+        
+        button.secondary { background-color: var(--cool-grey); color: var(--white);}
+        button.secondary:hover { background-color: #4A5B60; /* Darker Cool Grey */ }
+        
+        button:disabled { background-color: var(--light-grey); color: var(--cool-grey); cursor: not-allowed; }
 
         #teams-preview {
             display: flex;
@@ -81,21 +104,23 @@
         }
         .team-card {
             flex: 1 1 calc(33% - 15px);
-            background: #F9FAFB;
-            border: 2px solid #E5E7EB;
+            background: var(--pale-blue);
+            border: 2px solid var(--border-color);
             border-radius: 8px;
             padding: 15px;
             min-width: 200px;
         }
-        .team-card h3 { color: var(--primary); margin-bottom: 10px; }
+        .team-card h3 { color: var(--dark-teal); margin-bottom: 10px; }
+        .team-card p { color: var(--text-secondary); margin: 0; }
 
         #top-bar {
             text-align: center;
             margin-bottom: 20px;
             padding-bottom: 20px;
-            border-bottom: 2px solid #E5E7EB;
+            border-bottom: 2px solid var(--border-color);
             position: relative;
         }
+        #question-counter { color: var(--text-secondary); }
         #question-display {
             font-size: 24px;
             font-weight: bold;
@@ -105,17 +130,18 @@
         }
         #turn-announcer {
             font-size: 20px;
-            background: #FEF3C7;
+            background: var(--pale-green);
             padding: 10px;
             border-radius: 8px;
             display: inline-block;
             margin-bottom: 15px;
-            border: 2px solid #F59E0B;
+            border: 2px solid var(--nexus-green);
+            color: var(--deep-navy);
         }
         .steal-mode {
-            background: #FEE2E2 !important;
-            border-color: #EF4444 !important;
-            color: #B91C1C;
+            background: #FDF3F1 !important; /* Very light Coral tint */
+            border-color: var(--coral) !important;
+            color: var(--coral) !important;
         }
 
         #central-flags {
@@ -143,7 +169,7 @@
             background: linear-gradient(90deg, #d4d4d8 0%, #a1a1aa 100%);
             border-radius: 3px;
             margin-left: 2px;
-            box-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            box-shadow: 2px 2px 4px rgba(18, 59, 74, 0.2);
         }
         .cloth {
             position: absolute;
@@ -152,10 +178,10 @@
             width: 45px;
             height: 30px;
             clip-path: polygon(0% 0%, 100% 50%, 0% 100%);
-            box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            box-shadow: 2px 2px 4px rgba(18, 59, 74, 0.3);
         }
 
-        /* Original Flag Colors Kept Intact */
+        /* Flag Colors - Kept intact as requested, but refined slightly if needed (keeping original intent) */
         .color-red { background-color: #EF4444; }
         .color-blue { background-color: #3B82F6; }
         .color-green { background-color: #10B981; }
@@ -170,18 +196,19 @@
         }
         .game-team-card {
             flex: 1 1 calc(33% - 15px);
-            background: #FFFFFF;
-            border: 3px dashed #D1D5DB;
+            background: var(--white);
+            border: 3px dashed var(--border-color);
             border-radius: 8px;
             padding: 15px;
             min-width: 200px;
             transition: all 0.2s;
         }
+        .game-team-card h3 { color: var(--deep-navy); }
         .active-dropzone {
             border-color: var(--primary);
-            background: #F0FBFE; /* Very light Nexus Blue */
+            background: var(--pale-blue);
             transform: scale(1.02);
-            box-shadow: 0 4px 10px rgba(0, 175, 215, 0.2); /* Nexus Blue shadow */
+            box-shadow: 0 4px 10px rgba(0, 175, 215, 0.2);
         }
         .collected-flags {
             display: flex;
@@ -190,6 +217,7 @@
             margin-top: 10px;
             min-height: 30px;
         }
+        
         .mini-flag-wrapper {
             position: relative;
             width: 20px;
@@ -220,7 +248,8 @@
         .reveal-card {
             text-align: center;
             padding: 15px;
-            background: #F9FAFB;
+            background: var(--pale-blue);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             font-weight: bold;
             font-size: 20px;
@@ -228,6 +257,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            color: var(--deep-navy);
         }
         
         /* Podium Styles */
@@ -247,15 +277,16 @@
             width: 120px;
             text-align: center;
             border-radius: 8px 8px 0 0;
-            color: white;
+            color: var(--deep-navy);
             font-weight: bold;
             padding-bottom: 15px;
             position: relative;
-            box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 -4px 10px rgba(18, 59, 74, 0.1);
         }
-        .podium-1 { height: 180px; background: linear-gradient(180deg, #F59E0B 0%, #D97706 100%); z-index: 3;}
-        .podium-2 { height: 130px; background: linear-gradient(180deg, #9CA3AF 0%, #6B7280 100%); z-index: 2;}
-        .podium-3 { height: 90px; background: linear-gradient(180deg, #B45309 0%, #92400E 100%); z-index: 1;}
+        /* Using Amber and secondary colors for podium structure to fit brand */
+        .podium-1 { height: 180px; background: linear-gradient(180deg, var(--amber) 0%, #E0A632 100%); z-index: 3;}
+        .podium-2 { height: 130px; background: linear-gradient(180deg, var(--light-grey) 0%, #BCC9CB 100%); z-index: 2;}
+        .podium-3 { height: 90px; background: linear-gradient(180deg, var(--coral) 0%, #D65A3D 100%); z-index: 1;}
         
         .podium-medal {
             font-size: 30px;
@@ -265,7 +296,7 @@
         .podium-team-name { 
             position: absolute;
             top: -85px;
-            color: var(--text); 
+            color: var(--deep-navy); 
             font-size: 16px; 
             font-weight: bold; 
             width: 150px;
@@ -277,30 +308,31 @@
         .podium-members {
             font-size: 11px;
             font-weight: normal;
-            color: #6B7280;
+            color: var(--text-secondary);
             line-height: 1.2;
         }
-        .podium-score { font-size: 24px; margin-top: 10px;}
-        .podium-flags { font-size: 14px; font-weight: normal; color: rgba(255, 255, 255, 0.9); margin-top: 4px; }
+        .podium-score { font-size: 24px; margin-top: 10px; color: var(--deep-navy); }
+        .podium-flags { font-size: 14px; font-weight: normal; color: rgba(18, 59, 74, 0.8); margin-top: 4px; }
 
         .leaderboard-row {
             display: flex;
             justify-content: space-between;
             padding: 15px;
-            border-bottom: 1px solid #E5E7EB;
+            border-bottom: 1px solid var(--border-color);
             font-size: 18px;
-            background: #F9FAFB;
+            background: var(--white);
+            color: var(--deep-navy);
         }
-        .leaderboard-row:nth-child(even) { background-color: #F3F4F6; }
+        .leaderboard-row:nth-child(even) { background-color: var(--pale-blue); }
 
         #toast {
             position: fixed;
             bottom: 30px;
-            background: #1F2937;
-            color: white;
+            background: var(--deep-navy);
+            color: var(--white);
             padding: 15px 25px;
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(18, 59, 74, 0.2);
             z-index: 1000;
             transition: opacity 0.3s, transform 0.3s;
             transform: translateY(0);
@@ -311,7 +343,7 @@
         #modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6);
+            background: rgba(18, 59, 74, 0.6); /* Deep Navy semi-transparent overlay */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -319,13 +351,13 @@
             backdrop-filter: blur(3px);
         }
         #modal-box {
-            background: white;
+            background: var(--white);
             padding: 25px;
             border-radius: 12px;
             max-width: 400px;
             width: 90%;
             text-align: center;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 20px 25px -5px rgba(18, 59, 74, 0.1);
         }
         #modal-buttons {
             display: flex;
@@ -346,15 +378,15 @@
 
 <div id="setup-screen" class="container">
     <h1>🚩 Flag Frenzy Setup</h1>
-    <p>Gamify your retrieval practice! Enter your students and questions below.</p>
+    <p style="color: var(--text-secondary);">Gamify your retrieval practice! Enter your students and questions below.</p>
     
-    <h3>1. Students</h3>
+    <h3 style="color: var(--dark-teal);">1. Students</h3>
     <textarea id="students-input" placeholder="Paste student names here (one per line)&#10;Alice&#10;Bob&#10;Charlie..."></textarea>
     
-    <label for="max-team-size"><strong>Max Team Size:</strong></label>
+    <label for="max-team-size" style="color: var(--deep-navy);"><strong>Max Team Size:</strong></label>
     <input type="number" id="max-team-size" value="4" min="2" max="10" style="width: 100px;">
     
-    <h3>2. Questions (Optional)</h3>
+    <h3 style="color: var(--dark-teal); margin-top: 20px;">2. Questions (Optional)</h3>
     <textarea id="questions-input" placeholder="Paste questions here (one per line).&#10;If left blank, you can just read the questions aloud!"></textarea>
     
     <div style="margin-top: 20px;">
@@ -362,7 +394,7 @@
     </div>
 
     <div id="teams-preview-container" class="hidden">
-        <h2>Generated Teams</h2>
+        <h2 style="color: var(--dark-teal);">Generated Teams</h2>
         <div id="teams-preview"></div>
         <div style="margin-top: 20px; text-align: right;">
             <button class="secondary" onclick="generateTeams()">Regenerate Teams</button>
@@ -425,7 +457,7 @@
     <h1>🏆 The Game Has Ended!</h1>
     
     <div id="reveal-section">
-        <h2>First, The Secret Flag Values Were:</h2>
+        <h2 style="color: var(--dark-teal);">First, The Secret Flag Values Were:</h2>
         <div class="reveal-grid" id="reveal-grid">
             <!-- Revealed values injected here -->
         </div>
@@ -441,7 +473,7 @@
             <!-- Podium injected here -->
         </div>
 
-        <div id="leaderboard" style="max-width: 600px; margin: 0 auto; border-radius: 8px; overflow: hidden; border: 1px solid #E5E7EB;">
+        <div id="leaderboard" style="max-width: 600px; margin: 0 auto; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color);">
             <!-- Rest of leaderboard injected here -->
         </div>
         <div style="margin-top: 40px; text-align: center;">
@@ -454,8 +486,8 @@
 
 <div id="modal-overlay" class="hidden">
     <div id="modal-box">
-        <h2 id="modal-title" style="margin-top: 0; color: #1F2937;">Title</h2>
-        <p id="modal-text" style="color: #4B5563;">Message</p>
+        <h2 id="modal-title" style="margin-top: 0; color: var(--deep-navy);">Title</h2>
+        <p id="modal-text" style="color: var(--text-secondary);">Message</p>
         <div id="modal-buttons"></div>
     </div>
 </div>
@@ -475,7 +507,6 @@
 
     const MAX_QUESTIONS = 20;
 
-    // UI Helpers
     let toastTimeout;
     function showToast(message) {
         const toast = document.getElementById('toast');
@@ -599,7 +630,7 @@
             container.innerHTML += `
                 <div class="game-team-card" id="team-box-${index}">
                     <h3 style="margin-bottom: 5px;">${team.name}</h3>
-                    <small style="color: #6B7280;">${team.members.join(', ')}</small>
+                    <small style="color: var(--text-secondary);">${team.members.join(', ')}</small>
                     <div class="collected-flags" id="flags-${index}">
                         ${team.flags.map(f => `
                             <div class="mini-flag-wrapper">
@@ -721,7 +752,6 @@
         document.getElementById('end-screen').classList.remove('hidden');
         document.getElementById('toast').classList.add('hidden');
 
-        // Reveal values in the grid
         const revealGrid = document.getElementById('reveal-grid');
         revealGrid.innerHTML = ''; 
         FLAG_COLORS.forEach(color => {
@@ -737,7 +767,6 @@
             `;
         });
 
-        // Calculate scores behind the scenes
         teams.forEach(team => {
             team.score = team.flags.reduce((sum, color) => sum + flagValues[color], 0);
         });
@@ -748,27 +777,24 @@
         document.getElementById('reveal-section').classList.add('hidden');
         document.getElementById('leaderboard-section').classList.remove('hidden');
         
-        // Gentle Kahoot-style Confetti
         var duration = 8000;
         var end = Date.now() + duration;
 
         (function frame() {
-            // Left side
             confetti({
                 particleCount: 2,
                 angle: 60,
                 spread: 55,
                 origin: { x: 0, y: 0.8 },
-                colors: ['#00afd7', '#c4d600', '#EF4444', '#F59E0B', '#8B5CF6'],
+                colors: ['#00AFD7', '#C4D600', '#EF4444', '#F4B942', '#8B5CF6'], // Updated with Nexus colors
                 startVelocity: 45
             });
-            // Right side
             confetti({
                 particleCount: 2,
                 angle: 120,
                 spread: 55,
                 origin: { x: 1, y: 0.8 },
-                colors: ['#00afd7', '#c4d600', '#EF4444', '#F59E0B', '#8B5CF6'],
+                colors: ['#00AFD7', '#C4D600', '#EF4444', '#F4B942', '#8B5CF6'], // Updated with Nexus colors
                 startVelocity: 45
             });
 
@@ -777,11 +803,10 @@
             }
         }());
 
-        // Setup Podium
         const podiumContainer = document.getElementById('podium-container');
         podiumContainer.innerHTML = '';
         
-        const top3 = [teams[1], teams[0], teams[2]]; // Order: 2nd, 1st, 3rd
+        const top3 = [teams[1], teams[0], teams[2]]; 
         const podiumClasses = ['podium-2', 'podium-1', 'podium-3'];
         const medals = ['🥈', '🥇', '🥉'];
         const labels = ['2nd', '1st', '3rd'];
@@ -803,7 +828,6 @@
             }
         });
 
-        // Setup rest of Leaderboard
         const lb = document.getElementById('leaderboard');
         lb.innerHTML = '';
         for(let i = 3; i < teams.length; i++) {
@@ -812,11 +836,11 @@
                 <div class="leaderboard-row">
                     <div>
                         <strong>${i + 1}th:</strong> ${team.name}
-                        <div style="font-size: 13px; color: #6B7280; margin-top: 4px;">${team.members.join(', ')}</div>
+                        <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">${team.members.join(', ')}</div>
                     </div>
                     <div style="text-align: right; display: flex; flex-direction: column; justify-content: center;">
                         <div><strong>${team.score}</strong> pts</div>
-                        <small style="color:gray;">(${team.flags.length} flags)</small>
+                        <small style="color:var(--text-secondary);">(${team.flags.length} flags)</small>
                     </div>
                 </div>
             `;
