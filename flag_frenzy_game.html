@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flag Frenzy: Retrieval Practice</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            /* Updated to Nexus brand colors */
+            --primary: #00afd7; /* Nexus Blue */
+            --primary-hover: #0096b8;
+            --nexus-green: #c4d600; /* Nexus Green */
+            --nexus-green-hover: #aebf00;
+            --bg: #F3F4F6;
+            --card-bg: #FFFFFF;
+            --text: #1F2937;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1, h2, h3 { margin-top: 0; }
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        .hidden { display: none !important; }
+        
+        textarea, input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 2px solid #D1D5DB;
+            border-radius: 8px;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        textarea { height: 120px; resize: vertical; }
+        
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            margin: 5px;
+        }
+        button:hover { background-color: var(--primary-hover); }
+        button.danger { background-color: #EF4444; color: white;}
+        button.danger:hover { background-color: #DC2626; }
+        
+        /* Updated Success Button to use Nexus Green with dark text for readability */
+        button.success { background-color: var(--nexus-green); color: var(--text); }
+        button.success:hover { background-color: var(--nexus-green-hover); }
+        
+        button.secondary { background-color: #6B7280; color: white;}
+        button.secondary:hover { background-color: #4B5563; }
+        button:disabled { background-color: #9CA3AF; cursor: not-allowed; }
+
+        #teams-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .team-card {
+            flex: 1 1 calc(33% - 15px);
+            background: #F9FAFB;
+            border: 2px solid #E5E7EB;
+            border-radius: 8px;
+            padding: 15px;
+            min-width: 200px;
+        }
+        .team-card h3 { color: var(--primary); margin-bottom: 10px; }
+
+        #top-bar {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #E5E7EB;
+            position: relative;
+        }
+        #question-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 10px 0;
+            min-height: 40px;
+        }
+        #turn-announcer {
+            font-size: 20px;
+            background: #FEF3C7;
+            padding: 10px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-bottom: 15px;
+            border: 2px solid #F59E0B;
+        }
+        .steal-mode {
+            background: #FEE2E2 !important;
+            border-color: #EF4444 !important;
+            color: #B91C1C;
+        }
+
+        #central-flags {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 50px;
+            margin: 30px 0;
+            padding: 20px;
+        }
+        .flag-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            cursor: pointer;
+            transition: transform 0.2s, filter 0.2s;
+            position: relative;
+        }
+        .flag-wrapper:active { transform: scale(0.9); }
+        .flag-disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; filter: grayscale(50%); }
+        
+        .pole {
+            width: 6px;
+            height: 60px;
+            background: linear-gradient(90deg, #d4d4d8 0%, #a1a1aa 100%);
+            border-radius: 3px;
+            margin-left: 2px;
+            box-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .cloth {
+            position: absolute;
+            top: 2px;
+            left: 6px;
+            width: 45px;
+            height: 30px;
+            clip-path: polygon(0% 0%, 100% 50%, 0% 100%);
+            box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* Original Flag Colors Kept Intact */
+        .color-red { background-color: #EF4444; }
+        .color-blue { background-color: #3B82F6; }
+        .color-green { background-color: #10B981; }
+        .color-yellow { background-color: #F59E0B; }
+        .color-purple { background-color: #8B5CF6; }
+        .color-orange { background-color: #F97316; }
+
+        #game-teams {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .game-team-card {
+            flex: 1 1 calc(33% - 15px);
+            background: #FFFFFF;
+            border: 3px dashed #D1D5DB;
+            border-radius: 8px;
+            padding: 15px;
+            min-width: 200px;
+            transition: all 0.2s;
+        }
+        .active-dropzone {
+            border-color: var(--primary);
+            background: #F0FBFE; /* Very light Nexus Blue */
+            transform: scale(1.02);
+            box-shadow: 0 4px 10px rgba(0, 175, 215, 0.2); /* Nexus Blue shadow */
+        }
+        .collected-flags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+            min-height: 30px;
+        }
+        .mini-flag-wrapper {
+            position: relative;
+            width: 20px;
+            height: 25px;
+        }
+        .mini-pole {
+            width: 3px;
+            height: 25px;
+            background: #a1a1aa;
+            border-radius: 1px;
+        }
+        .mini-cloth {
+            position: absolute;
+            top: 1px;
+            left: 3px;
+            width: 16px;
+            height: 12px;
+            clip-path: polygon(0% 0%, 100% 50%, 0% 100%);
+        }
+
+        .reveal-grid {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .reveal-card {
+            text-align: center;
+            padding: 15px;
+            background: #F9FAFB;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 20px;
+            min-width: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        /* Podium Styles */
+        .podium-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 15px;
+            margin: 40px 0 20px 0;
+            height: 220px;
+        }
+        .podium-spot {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            width: 120px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+            color: white;
+            font-weight: bold;
+            padding-bottom: 15px;
+            position: relative;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+        }
+        .podium-1 { height: 180px; background: linear-gradient(180deg, #F59E0B 0%, #D97706 100%); z-index: 3;}
+        .podium-2 { height: 130px; background: linear-gradient(180deg, #9CA3AF 0%, #6B7280 100%); z-index: 2;}
+        .podium-3 { height: 90px; background: linear-gradient(180deg, #B45309 0%, #92400E 100%); z-index: 1;}
+        
+        .podium-medal {
+            font-size: 30px;
+            position: absolute;
+            top: -20px;
+        }
+        .podium-team-name { 
+            position: absolute;
+            top: -85px;
+            color: var(--text); 
+            font-size: 16px; 
+            font-weight: bold; 
+            width: 150px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .podium-members {
+            font-size: 11px;
+            font-weight: normal;
+            color: #6B7280;
+            line-height: 1.2;
+        }
+        .podium-score { font-size: 24px; margin-top: 10px;}
+        .podium-flags { font-size: 14px; font-weight: normal; color: rgba(255, 255, 255, 0.9); margin-top: 4px; }
+
+        .leaderboard-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #E5E7EB;
+            font-size: 18px;
+            background: #F9FAFB;
+        }
+        .leaderboard-row:nth-child(even) { background-color: #F3F4F6; }
+
+        #toast {
+            position: fixed;
+            bottom: 30px;
+            background: #1F2937;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            transition: opacity 0.3s, transform 0.3s;
+            transform: translateY(0);
+            font-weight: bold;
+        }
+        #toast.hidden { opacity: 0; transform: translateY(20px); pointer-events: none; }
+
+        #modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(3px);
+        }
+        #modal-box {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        #modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .end-game-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 14px;
+            padding: 8px 12px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="setup-screen" class="container">
+    <h1>🚩 Flag Frenzy Setup</h1>
+    <p>Gamify your retrieval practice! Enter your students and questions below.</p>
+    
+    <h3>1. Students</h3>
+    <textarea id="students-input" placeholder="Paste student names here (one per line)&#10;Alice&#10;Bob&#10;Charlie..."></textarea>
+    
+    <label for="max-team-size"><strong>Max Team Size:</strong></label>
+    <input type="number" id="max-team-size" value="4" min="2" max="10" style="width: 100px;">
+    
+    <h3>2. Questions (Optional)</h3>
+    <textarea id="questions-input" placeholder="Paste questions here (one per line).&#10;If left blank, you can just read the questions aloud!"></textarea>
+    
+    <div style="margin-top: 20px;">
+        <button onclick="generateTeams()">Generate Teams</button>
+    </div>
+
+    <div id="teams-preview-container" class="hidden">
+        <h2>Generated Teams</h2>
+        <div id="teams-preview"></div>
+        <div style="margin-top: 20px; text-align: right;">
+            <button class="secondary" onclick="generateTeams()">Regenerate Teams</button>
+            <button class="success" onclick="startGame()">Start Game!</button>
+        </div>
+    </div>
+</div>
+
+<div id="game-screen" class="container hidden">
+    <button class="danger end-game-btn" onclick="confirmEndGame()">End Game Early</button>
+
+    <div id="top-bar">
+        <h3 id="question-counter">Question 1 of 20</h3>
+        <div id="question-display">Teacher is reading the question aloud...</div>
+        
+        <div id="turn-announcer">It's <strong>Team Name</strong>'s Turn!</div>
+        
+        <div id="action-buttons">
+            <button class="success" onclick="handleCorrect()">Correct!</button>
+            <button class="danger" onclick="handleWrong()">Wrong / Pass</button>
+        </div>
+        <div id="click-instruction" class="hidden" style="color: var(--primary); font-weight: bold; margin-top: 10px;">
+            🎉 Correct! Click a flag from the center to add it to your team!
+        </div>
+    </div>
+
+    <div id="central-flags">
+        <div class="flag-wrapper flag-disabled" onclick="collectFlag('red')">
+            <div class="cloth color-red"></div>
+            <div class="pole"></div>
+        </div>
+        <div class="flag-wrapper flag-disabled" onclick="collectFlag('blue')">
+            <div class="cloth color-blue"></div>
+            <div class="pole"></div>
+        </div>
+        <div class="flag-wrapper flag-disabled" onclick="collectFlag('green')">
+            <div class="cloth color-green"></div>
+            <div class="pole"></div>
+        </div>
+        <div class="flag-wrapper flag-disabled" onclick="collectFlag('yellow')">
+            <div class="cloth color-yellow"></div>
+            <div class="pole"></div>
+        </div>
+        <div class="flag-wrapper flag-disabled" onclick="collectFlag('purple')">
+            <div class="cloth color-purple"></div>
+            <div class="pole"></div>
+        </div>
+        <div class="flag-wrapper flag-disabled" onclick="collectFlag('orange')">
+            <div class="cloth color-orange"></div>
+            <div class="pole"></div>
+        </div>
+    </div>
+
+    <div id="game-teams">
+        <!-- Teams injected here -->
+    </div>
+</div>
+
+<div id="end-screen" class="container hidden">
+    <h1>🏆 The Game Has Ended!</h1>
+    
+    <div id="reveal-section">
+        <h2>First, The Secret Flag Values Were:</h2>
+        <div class="reveal-grid" id="reveal-grid">
+            <!-- Revealed values injected here -->
+        </div>
+        <div style="text-align: center; margin-top: 30px;">
+            <button class="success" style="font-size: 20px; padding: 15px 30px;" onclick="revealLeaderboard()">Reveal Winners! 🚀</button>
+        </div>
+    </div>
+    
+    <div id="leaderboard-section" class="hidden">
+        <h2 style="text-align: center; font-size: 32px; color: var(--primary);">Final Leaderboard</h2>
+        
+        <div class="podium-container" id="podium-container">
+            <!-- Podium injected here -->
+        </div>
+
+        <div id="leaderboard" style="max-width: 600px; margin: 0 auto; border-radius: 8px; overflow: hidden; border: 1px solid #E5E7EB;">
+            <!-- Rest of leaderboard injected here -->
+        </div>
+        <div style="margin-top: 40px; text-align: center;">
+            <button onclick="location.reload()">Play Again</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast" class="hidden">Notification message here</div>
+
+<div id="modal-overlay" class="hidden">
+    <div id="modal-box">
+        <h2 id="modal-title" style="margin-top: 0; color: #1F2937;">Title</h2>
+        <p id="modal-text" style="color: #4B5563;">Message</p>
+        <div id="modal-buttons"></div>
+    </div>
+</div>
+
+<script>
+    const ANIMAL_NAMES = ["Fierce Tigers", "Clever Foxes", "Wise Owls", "Fast Cheetahs", "Sneaky Ninjas", "Mighty Bears", "Brave Lions", "Electric Eels", "Jumping Kangaroos", "Flying Falcons"];
+    const FLAG_COLORS = ["red", "blue", "green", "yellow", "purple", "orange"];
+    
+    let teams = [];
+    let questions = [];
+    let currentQuestionIndex = 0;
+    let baseTurnIndex = 0; 
+    let activeTeamIndex = 0; 
+    let stealAttempts = 0;
+    let triedTeamsThisRound = [];
+    let flagValues = {};
+
+    const MAX_QUESTIONS = 20;
+
+    // UI Helpers
+    let toastTimeout;
+    function showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.innerText = message;
+        toast.classList.remove('hidden');
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => toast.classList.add('hidden'), 4000);
+    }
+
+    function showModal(title, text, buttons) {
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-text').innerText = text;
+        const btnContainer = document.getElementById('modal-buttons');
+        btnContainer.innerHTML = '';
+        buttons.forEach(b => {
+            const btn = document.createElement('button');
+            btn.innerText = b.text;
+            btn.className = b.class || 'secondary';
+            btn.onclick = () => { 
+                document.getElementById('modal-overlay').classList.add('hidden'); 
+                if(b.action) b.action(); 
+            };
+            btnContainer.appendChild(btn);
+        });
+        document.getElementById('modal-overlay').classList.remove('hidden');
+    }
+
+    function shuffle(array) {
+        let currentIndex = array.length, randomIndex;
+        while (currentIndex !== 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        }
+        return array;
+    }
+
+    function generateTeams() {
+        const studentsRaw = document.getElementById('students-input').value.trim();
+        if (!studentsRaw) {
+            showModal("Missing Students", "Please paste some student names into the text box to generate teams.", [
+                { text: "Got it!", class: "success" }
+            ]);
+            return;
+        }
+        const maxPerTeam = parseInt(document.getElementById('max-team-size').value) || 4;
+        let students = studentsRaw.split('\n').map(s => s.trim()).filter(s => s !== "");
+        students = shuffle(students);
+
+        const numTeams = Math.ceil(students.length / maxPerTeam);
+        teams = [];
+        let shuffledAnimals = shuffle([...ANIMAL_NAMES]);
+
+        for (let i = 0; i < numTeams; i++) {
+            teams.push({
+                id: i,
+                name: shuffledAnimals[i % shuffledAnimals.length],
+                members: [],
+                flags: [],
+                score: 0
+            });
+        }
+
+        students.forEach((student, index) => {
+            teams[index % numTeams].members.push(student);
+        });
+
+        renderTeamsPreview();
+    }
+
+    function renderTeamsPreview() {
+        const container = document.getElementById('teams-preview');
+        container.innerHTML = "";
+        teams.forEach(team => {
+            container.innerHTML += `
+                <div class="team-card">
+                    <h3>${team.name}</h3>
+                    <p>${team.members.join(', ')}</p>
+                </div>
+            `;
+        });
+        document.getElementById('teams-preview-container').classList.remove('hidden');
+    }
+
+    function startGame() {
+        const qRaw = document.getElementById('questions-input').value.trim();
+        if (qRaw) {
+            questions = qRaw.split('\n').map(q => q.trim()).filter(q => q !== "");
+        } else {
+            questions = [];
+        }
+
+        const numNegatives = Math.random() < 0.5 ? 1 : 2; 
+        let negativesPool = shuffle([-10, -5]);
+        let selectedNegatives = negativesPool.slice(0, numNegatives);
+        
+        let zeroPool = [0];
+        
+        let positivesPool = shuffle([5, 10, 15, 20]);
+        let selectedPositives = positivesPool.slice(0, 6 - 1 - numNegatives);
+        
+        let finalValues = shuffle([...selectedNegatives, ...zeroPool, ...selectedPositives]);
+        
+        FLAG_COLORS.forEach((color, i) => {
+            flagValues[color] = finalValues[i];
+        });
+
+        document.getElementById('setup-screen').classList.add('hidden');
+        document.getElementById('game-screen').classList.remove('hidden');
+
+        currentQuestionIndex = 0;
+        baseTurnIndex = 0;
+        renderGameTeams();
+        startNextTurn();
+    }
+
+    function renderGameTeams() {
+        const container = document.getElementById('game-teams');
+        container.innerHTML = "";
+        teams.forEach((team, index) => {
+            container.innerHTML += `
+                <div class="game-team-card" id="team-box-${index}">
+                    <h3 style="margin-bottom: 5px;">${team.name}</h3>
+                    <small style="color: #6B7280;">${team.members.join(', ')}</small>
+                    <div class="collected-flags" id="flags-${index}">
+                        ${team.flags.map(f => `
+                            <div class="mini-flag-wrapper">
+                                <div class="mini-cloth color-${f}"></div>
+                                <div class="mini-pole"></div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function startNextTurn() {
+        let maxQs = questions.length > 0 ? questions.length : MAX_QUESTIONS;
+        if (currentQuestionIndex >= maxQs) {
+            endGame();
+            return;
+        }
+
+        activeTeamIndex = baseTurnIndex;
+        stealAttempts = 0;
+        triedTeamsThisRound = [activeTeamIndex];
+
+        updateTurnUI();
+    }
+
+    function updateTurnUI() {
+        let maxQs = questions.length > 0 ? questions.length : MAX_QUESTIONS;
+        document.getElementById('question-counter').innerText = `Question ${currentQuestionIndex + 1} of ${maxQs}`;
+        
+        if (questions.length > 0 && questions[currentQuestionIndex]) {
+            document.getElementById('question-display').innerText = questions[currentQuestionIndex];
+        } else {
+            document.getElementById('question-display').innerText = "Teacher is reading the question aloud...";
+        }
+
+        const announcer = document.getElementById('turn-announcer');
+        if (stealAttempts === 0) {
+            announcer.innerHTML = `It's <strong>${teams[activeTeamIndex].name}</strong>'s Turn!`;
+            announcer.className = "";
+        } else {
+            announcer.innerHTML = `🚨 STEAL OPPORTUNITY for <strong>${teams[activeTeamIndex].name}</strong>! 🚨`;
+            announcer.className = "steal-mode";
+        }
+
+        document.getElementById('action-buttons').classList.remove('hidden');
+        document.getElementById('click-instruction').classList.add('hidden');
+        disableFlagClick();
+        highlightActiveTeam(activeTeamIndex);
+    }
+
+    function highlightActiveTeam(index) {
+        document.querySelectorAll('.game-team-card').forEach(el => el.classList.remove('active-dropzone'));
+        document.getElementById(`team-box-${index}`).classList.add('active-dropzone');
+    }
+
+    function handleCorrect() {
+        document.getElementById('action-buttons').classList.add('hidden');
+        document.getElementById('click-instruction').classList.remove('hidden');
+        enableFlagClick();
+    }
+
+    function handleWrong() {
+        stealAttempts++;
+        if (stealAttempts > 2 || triedTeamsThisRound.length === teams.length) {
+            showToast("❌ No one got it right! Moving to the next question.");
+            advanceQuestion();
+        } else {
+            let availableTeams = teams.map((_, i) => i).filter(i => !triedTeamsThisRound.includes(i));
+            if (availableTeams.length === 0) {
+                showToast("❌ No more teams can steal! Moving to next question.");
+                advanceQuestion();
+                return;
+            }
+            activeTeamIndex = availableTeams[Math.floor(Math.random() * availableTeams.length)];
+            triedTeamsThisRound.push(activeTeamIndex);
+            updateTurnUI();
+        }
+    }
+
+    function advanceQuestion() {
+        currentQuestionIndex++;
+        baseTurnIndex = (baseTurnIndex + 1) % teams.length;
+        startNextTurn();
+    }
+
+    function enableFlagClick() {
+        document.querySelectorAll('.flag-wrapper').forEach(el => el.classList.remove('flag-disabled'));
+    }
+
+    function disableFlagClick() {
+        document.querySelectorAll('.flag-wrapper').forEach(el => el.classList.add('flag-disabled'));
+    }
+
+    function collectFlag(color) {
+        if (document.getElementById('click-instruction').classList.contains('hidden')) {
+            return; 
+        }
+        
+        teams[activeTeamIndex].flags.push(color);
+        renderGameTeams();
+        advanceQuestion();
+    }
+
+    function confirmEndGame() {
+        showModal(
+            "End Game Early?", 
+            "Are you sure you want to end the game now? This will reveal the flag values and calculate final scores based on the flags collected so far.", 
+            [
+                { text: "Cancel", class: "secondary" },
+                { text: "End Game Now", class: "danger", action: () => endGame() }
+            ]
+        );
+    }
+
+    function endGame() {
+        document.getElementById('game-screen').classList.add('hidden');
+        document.getElementById('end-screen').classList.remove('hidden');
+        document.getElementById('toast').classList.add('hidden');
+
+        // Reveal values in the grid
+        const revealGrid = document.getElementById('reveal-grid');
+        revealGrid.innerHTML = ''; 
+        FLAG_COLORS.forEach(color => {
+            const val = flagValues[color];
+            revealGrid.innerHTML += `
+                <div class="reveal-card">
+                    <div class="flag-wrapper" style="margin: 0 auto 15px auto; cursor: default; transform: scale(1.2);">
+                        <div class="cloth color-${color}"></div>
+                        <div class="pole"></div>
+                    </div>
+                    <div>${val > 0 ? '+' : ''}${val} pts</div>
+                </div>
+            `;
+        });
+
+        // Calculate scores behind the scenes
+        teams.forEach(team => {
+            team.score = team.flags.reduce((sum, color) => sum + flagValues[color], 0);
+        });
+        teams.sort((a, b) => b.score - a.score);
+    }
+
+    function revealLeaderboard() {
+        document.getElementById('reveal-section').classList.add('hidden');
+        document.getElementById('leaderboard-section').classList.remove('hidden');
+        
+        // Gentle Kahoot-style Confetti
+        var duration = 8000;
+        var end = Date.now() + duration;
+
+        (function frame() {
+            // Left side
+            confetti({
+                particleCount: 2,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0, y: 0.8 },
+                colors: ['#00afd7', '#c4d600', '#EF4444', '#F59E0B', '#8B5CF6'],
+                startVelocity: 45
+            });
+            // Right side
+            confetti({
+                particleCount: 2,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1, y: 0.8 },
+                colors: ['#00afd7', '#c4d600', '#EF4444', '#F59E0B', '#8B5CF6'],
+                startVelocity: 45
+            });
+
+            if (Date.now() < end) {
+                requestAnimationFrame(frame);
+            }
+        }());
+
+        // Setup Podium
+        const podiumContainer = document.getElementById('podium-container');
+        podiumContainer.innerHTML = '';
+        
+        const top3 = [teams[1], teams[0], teams[2]]; // Order: 2nd, 1st, 3rd
+        const podiumClasses = ['podium-2', 'podium-1', 'podium-3'];
+        const medals = ['🥈', '🥇', '🥉'];
+        const labels = ['2nd', '1st', '3rd'];
+
+        top3.forEach((team, index) => {
+            if(team) {
+                podiumContainer.innerHTML += `
+                    <div class="podium-spot ${podiumClasses[index]}">
+                        <div class="podium-medal">${medals[index]}</div>
+                        <div class="podium-team-name">
+                            ${team.name}
+                            <div class="podium-members">${team.members.join(', ')}</div>
+                        </div>
+                        <div>${labels[index]}</div>
+                        <div class="podium-score">${team.score} pts</div>
+                        <div class="podium-flags">(${team.flags.length} flags)</div>
+                    </div>
+                `;
+            }
+        });
+
+        // Setup rest of Leaderboard
+        const lb = document.getElementById('leaderboard');
+        lb.innerHTML = '';
+        for(let i = 3; i < teams.length; i++) {
+            let team = teams[i];
+            lb.innerHTML += `
+                <div class="leaderboard-row">
+                    <div>
+                        <strong>${i + 1}th:</strong> ${team.name}
+                        <div style="font-size: 13px; color: #6B7280; margin-top: 4px;">${team.members.join(', ')}</div>
+                    </div>
+                    <div style="text-align: right; display: flex; flex-direction: column; justify-content: center;">
+                        <div><strong>${team.score}</strong> pts</div>
+                        <small style="color:gray;">(${team.flags.length} flags)</small>
+                    </div>
+                </div>
+            `;
+        }
+    }
+</script>
+</body>
+</html>
