@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classroom Games</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        bgLight: '#F8FAFA',
+                        navy: '#123B4A',
+                        coolGrey: '#60747A',
+                        nexusBlue: '#00AFD7',
+                        darkTeal: '#17657A',
+                        nexusGreen: '#C4D600',
+                        coral: '#E76F51',
+                        amber: '#F4B942',
+                        borderSubtle: '#DCE5E7'
+                    },
+                    boxShadow: {
+                        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+                        'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom styles for smooth accordion transitions */
+        .guide-content {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, opacity 0.4s ease-in-out, margin-top 0.4s ease-in-out;
+        }
+        
+        .guide-content.open {
+            max-height: 2500px; /* Large enough to fit the content */
+            opacity: 1;
+            margin-top: 1.5rem; /* Tailwind mt-6 */
+        }
+
+        .guide-list li {
+            margin-bottom: 0.75rem;
+        }
+        
+        .guide-list strong {
+            color: #123B4A;
+        }
+    </style>
+</head>
+<body class="bg-bgLight text-navy min-h-screen p-6 md:p-12">
+
+    <header class="max-w-4xl mx-auto mb-12 text-center">
+        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-3 text-navy">Classroom Games</h1>
+        <p class="text-coolGrey text-lg md:text-xl font-light">Interactive and engaging retrieval practice tools for your classroom.</p>
+    </header>
+
+    <main class="max-w-4xl mx-auto space-y-8">
+
+        <!-- Flag Frenzy Game Card -->
+        <article class="bg-white rounded-xl border border-borderSubtle shadow-card hover:shadow-card-hover transition-shadow duration-300 p-6 md:p-8">
+            <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+                <div class="flex-1">
+                    <h2 class="text-2xl font-bold text-navy mb-3">
+                        <a href="flag_frenzy_game.html" class="hover:text-nexusBlue transition-colors decoration-2 hover:underline underline-offset-4">🚩 Flag Frenzy</a>
+                    </h2>
+                    <p class="text-coolGrey leading-relaxed mb-6">
+                        Flag Frenzy is a gamified retrieval practice where randomly generated student teams answer recall questions to collect colored flags from the board. The engaging twist is that each flag color holds a secret, randomized point value that is only revealed at the very end, keeping every team invested and capable of winning until the final leaderboard!
+                    </p>
+                    <div class="flex flex-wrap gap-4 items-center">
+                        <a href="flag_frenzy_game.html" class="bg-nexusBlue hover:bg-darkTeal text-white font-semibold py-2.5 px-6 rounded-lg shadow-sm transition-colors duration-200 inline-flex items-center gap-2">
+                            Play Game
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            </svg>
+                        </a>
+                        <button onclick="toggleGuide('guide-flag')" class="text-nexusBlue hover:text-darkTeal font-medium py-2.5 px-4 rounded-lg border border-borderSubtle bg-bgLight hover:bg-white transition-colors duration-200 inline-flex items-center gap-2">
+                            Click here to learn more
+                            <svg id="icon-flag" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transform transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flag Frenzy Teacher Guide Dropdown -->
+            <div id="guide-flag" class="guide-content border-t border-borderSubtle">
+                <div class="pt-6">
+                    <h3 class="text-xl font-bold text-navy mb-4">🚩 Flag Frenzy: A Quick Guide for Teachers</h3>
+                    <p class="text-coolGrey mb-6">Flag Frenzy is a gamified retrieval practice tool designed to keep all students engaged. Teams answer recall questions to collect colorful flags, but there's a twist: the point values of the flags are completely secret until the end of the game!</p>
+                    
+                    <p class="text-coolGrey font-medium mb-3">Here is a quick rundown of how to play:</p>
+                    
+                    <ol class="list-decimal pl-5 space-y-4 text-coolGrey guide-list">
+                        <li>
+                            <strong>Quick Setup</strong><br>
+                            <span class="block mt-1"><strong>Students:</strong> Simply paste your class list into the box and choose a maximum team size. The app automatically groups students into random teams with fun animal names.</span>
+                            <span class="block mt-1"><strong>Questions:</strong> You can paste a list of questions to display on the screen, or leave the box blank and just read your questions aloud.</span>
+                        </li>
+                        <li>
+                            <strong>Gameplay & Turns</strong><br>
+                            The app will clearly announce whose turn it is. Ask the team a question:
+                            <ul class="list-none pl-2 mt-2 space-y-2">
+                                <li><span class="font-bold text-nexusGreen">✅ If they get it right:</span> Click the "Correct!" button. The team gets to choose a flag color from the center of the screen. Click their chosen flag to add it to their team's box.</li>
+                                <li><span class="font-bold text-coral">❌ If they get it wrong (or pass):</span> Click the "Wrong / Pass" button. The app will immediately trigger a "Steal Opportunity" and randomly select a different team to try and answer. (If they also get it wrong, it picks a second steal team before moving on).</li>
+                            </ul>
+                            <p class="mt-2 italic text-sm">Note: The central flags always replenish, so all 6 colors are always available to choose from.</p>
+                        </li>
+                        <li>
+                            <strong>The Big Twist: Secret Scoring</strong><br>
+                            To keep the game competitive and unpredictable, the team with the most flags doesn't always win!
+                            <ul class="list-disc pl-5 mt-2 space-y-1">
+                                <li>Behind the scenes, the app randomly assigns a hidden point value to each of the 6 flag colors every time you play.</li>
+                                <li>Values range from -10 to +20 (there is always at least one zero and up to two negative values).</li>
+                                <li>Students must guess which colors are "lucky" and which are "cursed", adding a fun element of chance that keeps lower-attaining students fully invested in the game.</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong>Game Over</strong><br>
+                            The game automatically ends after 20 questions. However, if you are running out of time, you can click "End Game Early" at any point.<br>
+                            First, the app will dramatically reveal what each flag color was actually worth. Then, click the final button to calculate the scores and reveal the 1st, 2nd, and 3rd place winners on a celebratory podium!
+                        </li>
+                    </ol>
+                </div>
+            </div>
+        </article>
+
+        <!-- Pen Grab Game Card -->
+        <article class="bg-white rounded-xl border border-borderSubtle shadow-card hover:shadow-card-hover transition-shadow duration-300 p-6 md:p-8">
+            <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+                <div class="flex-1">
+                    <h2 class="text-2xl font-bold text-navy mb-3">
+                        <a href="pen_grab_true_false_game.html" class="hover:text-nexusBlue transition-colors decoration-2 hover:underline underline-offset-4">🖊️ Pen Grab</a>
+                    </h2>
+                    <p class="text-coolGrey leading-relaxed mb-6">
+                        In this fast-paced retrieval game, paired students race to grab a single pen on their desk if they believe a displayed statement is true, or leave it untouched if they think it is false. Teams earn a point for every pen correctly snatched during a true statement, but lose a point for every pen mistakenly grabbed when a statement is false.
+                    </p>
+                    <div class="flex flex-wrap gap-4 items-center">
+                        <a href="pen_grab_true_false_game.html" class="bg-nexusBlue hover:bg-darkTeal text-white font-semibold py-2.5 px-6 rounded-lg shadow-sm transition-colors duration-200 inline-flex items-center gap-2">
+                            Play Game
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            </svg>
+                        </a>
+                        <button onclick="toggleGuide('guide-pen')" class="text-nexusBlue hover:text-darkTeal font-medium py-2.5 px-4 rounded-lg border border-borderSubtle bg-bgLight hover:bg-white transition-colors duration-200 inline-flex items-center gap-2">
+                            Click here to learn more
+                            <svg id="icon-pen" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transform transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pen Grab Teacher Guide Dropdown -->
+            <div id="guide-pen" class="guide-content border-t border-borderSubtle">
+                <div class="pt-6">
+                    <h3 class="text-xl font-bold text-navy mb-4">🖊️ Pen Grab: A Quick Guide for Teachers</h3>
+                    <p class="text-coolGrey mb-6">Pen Grab is a fast-paced, highly physical retrieval practice game that tests both your students' knowledge and their reaction time. Students play in pairs, competing directly against their partner to snatch a single pen on their desk based on whether a statement is true or false!</p>
+                    
+                    <p class="text-coolGrey font-medium mb-3">Here is a quick rundown of how to play:</p>
+                    
+                    <ol class="list-decimal pl-5 space-y-4 text-coolGrey guide-list">
+                        <li>
+                            <strong>Quick Setup</strong><br>
+                            <strong>Statements:</strong> Simply paste your list of statements into the box, separated by a semicolon (e.g., <em>All viruses contain DNA; F; They contain DNA or RNA, not both</em>). You can easily include explanations for false statements that will pop up on the screen!
+                        </li>
+                        <li>
+                            <strong>The Icebreaker</strong><br>
+                            To avoid arguments over teams, the app handles it for you!<br>
+                            Before the game begins, an icebreaker question appears on the board (e.g., "In your pairs, who woke up earliest today?").<br>
+                            The game then beautifully splits the class down the middle based on their answer, assigning each half to a randomly generated famous scientist team (e.g., Team Darwin vs. Team Curie) styled in vibrant Nexus blue and green.
+                        </li>
+                        <li>
+                            <strong>Gameplay & The 10-Second Dash</strong><br>
+                            A statement appears on the screen alongside a ticking 10-second timer.
+                            <ul class="list-none pl-2 mt-2 space-y-2">
+                                <li><span class="font-bold text-nexusGreen">✅ If they think it’s True:</span> Students race to grab the pen on the desk before their partner does.</li>
+                                <li><span class="font-bold text-coral">❌ If they think it’s False:</span> They must resist the urge to grab and leave the pen completely alone!</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong>Scoring & The Big Reveal</strong><br>
+                            When the timer hits zero, the app dramatically reveals if the statement was True or False, along with your optional explanation.<br><br>
+                            <strong>If it was True:</strong> Ask the room to hold up the pens they grabbed. Tally them up and use the large on-screen + and - buttons to log the scores. Every pen held equals +1 point for that team.<br>
+                            <strong>If it was False:</strong> The trap is sprung! Any student caught holding a pen loses -1 point for their team.<br><br>
+                            A running total leaderboard is shown between every round to keep the competitive energy high.
+                        </li>
+                        <li>
+                            <strong>Game Over</strong><br>
+                            The game naturally concludes after 10 statements. However, if you are running out of time before the bell rings, you can click the "End Early 🛑" button on the leaderboard at any point. The app will immediately jump to the finale, declaring the overall winning scientists and celebrating with a massive confetti drop! 🎉
+                        </li>
+                    </ol>
+                </div>
+            </div>
+        </article>
+
+    </main>
+
+    <script>
+        function toggleGuide(guideId) {
+            const guide = document.getElementById(guideId);
+            const iconId = guideId === 'guide-flag' ? 'icon-flag' : 'icon-pen';
+            const icon = document.getElementById(iconId);
+            
+            // Toggle the open class which manages max-height and opacity
+            guide.classList.toggle('open');
+            
+            // Rotate the chevron icon
+            if (guide.classList.contains('open')) {
+                icon.classList.add('rotate-180');
+            } else {
+                icon.classList.remove('rotate-180');
+            }
+        }
+    </script>
+</body>
+</html>
